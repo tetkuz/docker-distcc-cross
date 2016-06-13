@@ -1,14 +1,18 @@
 # Docker + distcc + cross compiler
 
-distcc + cross compiler を docker コンテナに入れることで、
-ホスト環境を汚さず distcc と cross compiler をインストールすることができます。
+distcc + cross compiler を docker コンテナにまとめることで
+ホスト環境を汚さず distcc と cross compiler を使うことができます。
+
+distcc は標準で avahi に対応していますが、Dockerfile には
+これを含んでいません。そのため、クライアント(Armadillo)側で
+`DISTCC_HOSTS` の環境変数を設定する必要があります。
 
 ## 動作確認済み
 
- wheezy: arm-linux-gnueabihf-gcc-4.6
-stretch: arm-linux-gnueabihf-gcc-5
-
-jessie (shiretoko) は誰か作ってください :-)
+ファイル名        : gcc バージョン
+wheezy.Dockerfile : arm-linux-gnueabihf-gcc-4.6
+jessie.Dockerfile : arm-linux-gnueabihf-gcc-4.9
+stretch.Dockerfile: arm-linux-gnueabihf-gcc-5
 
 ## Armadillo と合わせて使うには
 
@@ -49,7 +53,7 @@ jessie (shiretoko) は誰か作ってください :-)
     ```sh
     [Armadillo ~]$ sudo apt-get install distcc ccache
     ```
-   `distcc` に加え、`ccache` をインストールすることで、より高速にコンパイルすることができます。
+   `distcc` に加え、`ccache` をインストールすることで、2回目以降のコンパイルがより高速になります。
 
 2. ccache の設定
     ```sh
@@ -57,7 +61,7 @@ jessie (shiretoko) は誰か作ってください :-)
     ```
     `/usr/lib/ccache` にパスを通すと、ccache が使えるようになります。
 
-3. ccache のパス確認
+3. gccのパス(ccacheが有効になっているか)を確認
     ```sh
     [Armadillo ~]$ which gcc
     /usr/lib/ccache/gcc
@@ -79,7 +83,7 @@ jessie (shiretoko) は誰か作ってください :-)
     [Armadillo ~]$ DISTCC_HOSTS=[PCのIPアドレス]:9000 CCACHE_PREFIX=distcc gcc -c hoge.c
     ```
 
-2. 分散コンパイルしているかを確認
+- 補足1: 分散コンパイルしているかを確認
    - distccmon-text を実行
       ```sh
       [Armadillo ~]$ distccmon-text 0.05
@@ -90,5 +94,13 @@ jessie (shiretoko) は誰か作ってください :-)
     ```
 
     distccmon-text のログに PCのIPアドレスが流れたら OK
-    ちなみに、`gcc hoge.c` だとリンクまで一気にやるので distcc が付け入る空きがなく
+    ちなみに、`gcc hoge.c` だとリンクまで一気にやるので distcc が付け入る隙がなく
     分散コンパイルしてくれません。
+
+- 補足2: Makefile があるときは?
+    - 同じように make するだけ
+    ```sh
+    [Armadillo ~]$ DISTCC_HOSTS=[PCのIPアドレス]:9000 CCACHE_PREFIX=distcc make -j16
+    ```
+    作業用PCのコア数に合わせて `-j` オプションで並列化させると効果を体験しやすいです。
+
