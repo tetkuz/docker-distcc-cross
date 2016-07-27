@@ -27,7 +27,7 @@ stretch.Dockerfile: arm-linux-gnueabihf-gcc-5
 ### Step 1: PCの設定
 
 1. [Docker](https://www.docker.com/) のインストール
-   - 参考: https://docs.docker.com/linux/step_one/
+   - 参考: https://docs.docker.com/engine/installation/linux/debian/
 
 2. コンテナのビルド
     ```sh
